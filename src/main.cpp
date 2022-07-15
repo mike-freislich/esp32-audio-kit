@@ -13,20 +13,20 @@
 #include <ArduinoOTA.h>
 #include "AudioKitHAL.h"
 #include "SineWaveGenerator.h"
-#include "TelnetStream.h"
+#include "credentials.h"
 
+#define LED1 GPIO_NUM_19
+#define LED2 GPIO_NUM_22
 
 AudioKit kit;
 SineWaveGenerator wave;
 const int BUFFER_SIZE = 1024;
 uint8_t buffer[BUFFER_SIZE];
-uint8_t pinGreenLed;
-bool blink = true;
 
 void setupWiFi()
 {
   WiFi.mode(WIFI_STA);
-  WiFi.begin("IvoryTower", "Butterfly1977");
+  WiFi.begin(MY_SSID, MY_SSAUTH);
 
   ArduinoOTA.setHostname("esp32");
   ArduinoOTA
@@ -58,49 +58,32 @@ void setupWiFi()
 
 void setup()
 {
-  Serial.begin(115200); 
+  Serial.begin(115200);
 
-  LOGLEVEL_AUDIOKIT = AudioKitInfo;
-  
-  // open in write mode
+  LOGLEVEL_AUDIOKIT = AudioKitError;
   auto cfg = kit.defaultConfig(AudioOutput);
-
-  kit.setSampleRate(AUDIO_HAL_48K_SAMPLES);
-  kit.setVolume(10);
   kit.begin(cfg);
 
   // 1000 hz
-  wave.setFrequency(1000);
+  wave.setFrequency(1);
   wave.setSampleRate(cfg.sampleRate());
-
-  // pinGreenLed = kit.pinGreenLed();
-  pinGreenLed = GPIO_NUM_22;
-  pinMode(pinGreenLed, OUTPUT);
-  digitalWrite(pinGreenLed, LOW);
-
-  delay(1000);
-  Serial.println("Sample Rate: " + cfg.sampleRate());
-  Serial.println("bpS: " + cfg.bitsPerSample());
+  
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+  digitalWrite(LED1, HIGH);
+  digitalWrite(LED2, HIGH);
 
   setupWiFi();
 }
-
-
 
 void loop()
 {
   size_t l = wave.read(buffer, BUFFER_SIZE);
   kit.write(buffer, l);
-  delay(100);
-  Serial.print(int(buffer[1]));
-  // Serial.print(" ");
-  /*
-  blink = !blink;
-  if (blink)
-    digitalWrite(pinGreenLed, LOW);
-  else
-    digitalWrite(pinGreenLed, HIGH);
-    */
+  int16_t *ptr = (int16_t *)buffer;
+  Serial.print(">signal:");
+  Serial.println(*ptr);
+
   ArduinoOTA.handle();
   yield();
 }

@@ -39,7 +39,7 @@ class SineWaveGenerator {
             int16_t result = m_amplitude * sin(angle);
             m_time += m_deltaTime;
             return result;
-        }
+        }        
 
         /// filles the data with 2 channels
         size_t read(uint8_t *buffer, size_t bytes){
