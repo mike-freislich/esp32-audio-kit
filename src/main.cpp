@@ -22,6 +22,9 @@ AudioKit kit;
 SineWaveGenerator wave;
 const int BUFFER_SIZE = 1024;
 uint8_t buffer[BUFFER_SIZE];
+uint16_t freq = 1;
+uint16_t count = 0;
+bool direction = true;
 
 void setupWiFi()
 {
@@ -64,10 +67,9 @@ void setup()
   auto cfg = kit.defaultConfig(AudioOutput);
   kit.begin(cfg);
 
-  // 1000 hz
   wave.setFrequency(1);
   wave.setSampleRate(cfg.sampleRate());
-  
+
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
   digitalWrite(LED1, HIGH);
@@ -85,5 +87,23 @@ void loop()
   Serial.println(*ptr);
 
   ArduinoOTA.handle();
+  if (++count % 100 == 0)
+  {
+    if (direction)
+    {
+      if (++freq > 10)
+        direction = !direction;
+    }
+    else
+    {
+      if (--freq < 1)      
+        direction = !direction;
+    }
+    Serial.print(">freq:");
+    Serial.println(freq);
+
+    wave.setFrequency(freq);
+  }
+
   yield();
 }
